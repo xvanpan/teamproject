@@ -15,7 +15,8 @@ public:
     const Station* getStationById(int id) const;
     Station* getStationById(int id);
 
-    bool setStationStatus(int id, bool isOpen);
+    bool setStationStatus(int id, StationStatus status);
+    bool setStationOpen(int id, bool isOpen);
     bool isStationOpen(int id) const;
 
     std::vector<Station> getClosedStations() const;
@@ -23,6 +24,11 @@ public:
     std::vector<int> searchStationByName(const std::string& name) const;
 
     const std::vector<Station>& getAllStations() const;
+
+private:
+    StationStatus parseStatusText(const std::string& text) const;
+    std::string toStatusText(StationStatus status) const;
+    void rebuildIndex();
 
 private:
     std::vector<Station> stations_;

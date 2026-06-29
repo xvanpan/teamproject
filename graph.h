@@ -13,5 +13,8 @@ public:
     const std::vector<Edge>& neighbors(int stationId) const;
 
 private:
+    EdgeType parseEdgeType(const std::string& lineText) const;
+
+private:
     std::vector<std::vector<Edge>> adj_;
 };

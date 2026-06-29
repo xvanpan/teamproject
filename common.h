@@ -1,23 +1,34 @@
 #pragma once
-#pragma once
 #include <string>
 #include <vector>
 
 const int INF = 1000000000;
 const int TRANSFER_TIME = 5;
 
+enum class StationStatus {
+    Open,
+    Closed
+};
+
+enum class EdgeType {
+    Normal,
+    Transfer
+};
+
 struct Station {
     int id;
     std::string name;
     std::string line;
-    bool isOpen;
+    StationStatus status = StationStatus::Open;
 };
 
 struct Edge {
+    int from;
     int to;
     std::string line;
     std::string direction;
-    int timeCost;
+    int timeCost = 0;
+    EdgeType type = EdgeType::Normal;
 };
 
 struct PathResult {
