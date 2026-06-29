@@ -8,7 +8,10 @@ class PathFinder {
 public:
     PathFinder(const MetroGraph& graph, const StationManager& stationManager);
 
+    // Shortest-time path is ordered by total time first, then fewer transfers.
     PathResult shortestTimePath(int startId, int endId) const;
+
+    // Minimum-transfer path is ordered by transfer count first, then shorter time.
     PathResult minTransferPath(int startId, int endId) const;
 
     std::vector<PathResult> kShortestTimePaths(int startId, int endId, int k = 3) const;
