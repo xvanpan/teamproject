@@ -10,9 +10,13 @@ public:
 
 private:
     void showMainMenu() const;
-    void handlePathMenu();
+    void showStationMenu() const;
+    void showTimePathMenu() const;
+    void showTransferPathMenu() const;
+
     void handleStationMenu();
-    void handleLineMenu();
+    void handleTimePathMenu();
+    void handleTransferPathMenu();
 
     void queryShortestTimePath();
     void queryKShortestTimePaths();
@@ -24,6 +28,8 @@ private:
     void resetStationStatus();
     void showClosedStations();
     void showLineInfo();
+    void analyzeAffectedStations();
+    void searchStationInfo();
 
     void printPathResult(const PathResult& result) const;
 
