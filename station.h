@@ -18,6 +18,7 @@ public:
     bool setStationStatus(int id, StationStatus status);
     bool setStationOpen(int id, bool isOpen);
     bool isStationOpen(int id) const;
+    bool hasStation(int id)const;
 
     std::vector<Station> getClosedStations() const;
     std::vector<Station> getStationsByLine(const std::string& line) const;

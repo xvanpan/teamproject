@@ -6,7 +6,7 @@
 
 using namespace std;
 
-bool MetroGraph::buildFromCsv(const string& fileName, const StationManager& stationManager) {
+bool MetroGraph::buildFromCsv(const string& fileName, const StationManager& stationManager) {//建图函数
     ifstream file(fileName);
     if (!file.is_open()) {
         cerr << "错误：无法打开文件 " << fileName << endl;
