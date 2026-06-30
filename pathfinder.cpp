@@ -262,6 +262,7 @@ vector<PathResult> PathFinder::kShortestTimePaths(int startId, int endId, int k)
     };
 
     priority_queue<State, vector<State>, greater<State>> pq;
+    vector<int> expandedCount(graph_.vertexCount(), 0);
     set<string> accepted;
     const int maxExpansions = 200000;
     int expansions = 0;
@@ -274,6 +275,14 @@ vector<PathResult> PathFinder::kShortestTimePaths(int startId, int endId, int k)
         expansions++;
 
         int u = cur.path.back();
+        if (u < 0 || u >= graph_.vertexCount()) {
+            continue;
+        }
+        if (expandedCount[u] >= k) {
+            continue;
+        }
+        expandedCount[u]++;
+
         if (u == endId) {
             string key = makePathKey(cur.path);
             if (accepted.insert(key).second) {
@@ -292,12 +301,20 @@ vector<PathResult> PathFinder::kShortestTimePaths(int startId, int endId, int k)
         for (const Edge& edge : graph_.neighbors(u)) {
             int v = edge.to;
             if (!isStationAvailable(v) || containsStation(cur.path, v)) continue;
+            if (v >= 0 && v < graph_.vertexCount() && expandedCount[v] >= k) continue;
 
             State next = cur;
             next.totalTime += edge.timeCost;
             next.transfers += countsAsTransfer(edge, u, startId) ? 1 : 0;
             next.path.push_back(v);
             pq.push(next);
+        }
+    }
+
+    if (results.empty()) {
+        PathResult result = shortestTimePath(startId, endId);
+        if (result.valid) {
+            results.push_back(result);
         }
     }
 
@@ -321,6 +338,7 @@ vector<PathResult> PathFinder::kMinTransferPaths(int startId, int endId, int k) 
     };
 
     priority_queue<State, vector<State>, greater<State>> pq;
+    vector<int> expandedCount(graph_.vertexCount(), 0);
     set<string> accepted;
     const int maxExpansions = 200000;
     int expansions = 0;
@@ -333,6 +351,14 @@ vector<PathResult> PathFinder::kMinTransferPaths(int startId, int endId, int k) 
         expansions++;
 
         int u = cur.path.back();
+        if (u < 0 || u >= graph_.vertexCount()) {
+            continue;
+        }
+        if (expandedCount[u] >= k) {
+            continue;
+        }
+        expandedCount[u]++;
+
         if (u == endId) {
             string key = makePathKey(cur.path);
             if (accepted.insert(key).second) {
@@ -351,12 +377,20 @@ vector<PathResult> PathFinder::kMinTransferPaths(int startId, int endId, int k) 
         for (const Edge& edge : graph_.neighbors(u)) {
             int v = edge.to;
             if (!isStationAvailable(v) || containsStation(cur.path, v)) continue;
+            if (v >= 0 && v < graph_.vertexCount() && expandedCount[v] >= k) continue;
 
             State next = cur;
             next.transfers += countsAsTransfer(edge, u, startId) ? 1 : 0;
             next.totalTime += edge.timeCost;
             next.path.push_back(v);
             pq.push(next);
+        }
+    }
+
+    if (results.empty()) {
+        PathResult result = minTransferPath(startId, endId);
+        if (result.valid) {
+            results.push_back(result);
         }
     }
 
