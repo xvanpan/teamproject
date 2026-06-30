@@ -31,6 +31,7 @@ bool StationManager::loadFromCsv(const std::string& fileName)
 {
     std::ifstream fin(fileName);
     if (!fin.is_open()) {
+        std::cerr << "错误：无法打开文件 " << fileName << std::endl;
         return false;
     }
 
@@ -56,10 +57,10 @@ bool StationManager::loadFromCsv(const std::string& fileName)
         std::getline(ss, statusText, ',');
 
         Station station;
-        station.id = std::stoi(idText);
-        station.name = nameText;
-        station.line = lineText;
-        station.status = parseStatusText(statusText);
+        station.id = std::stoi(trimCsvField(idText));
+        station.name = trimCsvField(nameText);
+        station.line = trimCsvField(lineText);
+        station.status = parseStatusText(trimCsvField(statusText));
 
         stations_.push_back(station);
     }
@@ -72,6 +73,7 @@ bool StationManager::saveToCsv(const std::string& fileName) const
 {
     std::ofstream fout(fileName);
     if (!fout.is_open()) {
+        std::cerr << "错误：无法写入文件 " << fileName << std::endl;
         return false;
     }
 
@@ -98,6 +100,7 @@ bool StationManager::batchUpdateStatusFromCsv(const std::string& updateFile)
 {
     std::ifstream fin(updateFile);
     if (!fin.is_open()) {
+        std::cerr << "错误：无法打开文件 " << updateFile << std::endl;
         return false;
     }
 
@@ -116,8 +119,8 @@ bool StationManager::batchUpdateStatusFromCsv(const std::string& updateFile)
         std::getline(ss, idText, ',');
         std::getline(ss, statusText, ',');
 
-        int id = std::stoi(idText);
-        StationStatus status = parseStatusText(statusText);
+        int id = std::stoi(trimCsvField(idText));
+        StationStatus status = parseStatusText(trimCsvField(statusText));
         setStationStatus(id, status);
     }
 

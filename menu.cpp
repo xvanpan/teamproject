@@ -194,9 +194,9 @@ void MenuSystem::handleTransferPathMenu()
 
 void MenuSystem::batchUpdateStationStatus()
 {
-    bool ok = stationManager_.batchUpdateStatusFromCsv("data/update_station_status.csv");
+    bool ok = stationManager_.batchUpdateStatusFromCsv(resolveDataPath("update_station_status.csv"));
     if (ok) {
-        stationManager_.saveToCsv("data/Station.csv");
+        stationManager_.saveToCsv(resolveDataPath("Station.csv"));
         std::cout << "\n批量更新成功。\n";
     }
     else {
@@ -217,7 +217,7 @@ void MenuSystem::manualUpdateStationStatus()
 
     bool ok = stationManager_.setStationOpen(id, statusChoice == 1);
     if (ok) {
-        stationManager_.saveToCsv("data/Station.csv");
+        stationManager_.saveToCsv(resolveDataPath("Station.csv"));
         std::cout << "站点状态更新成功。\n";
     }
     else {
@@ -228,7 +228,7 @@ void MenuSystem::manualUpdateStationStatus()
 
 void MenuSystem::resetStationStatus()
 {
-    bool ok = stationManager_.resetFromInitCsv("data/Station_init.csv", "data/Station.csv");
+    bool ok = stationManager_.resetFromInitCsv(resolveDataPath("Station_init.csv"), resolveDataPath("Station.csv"));
     if (ok) {
         std::cout << "\n已恢复所有站点初始状态。\n";
     }
@@ -305,12 +305,43 @@ void MenuSystem::showLineInfo()
     }
 
     std::cout << lineName << " 共有 " << stations.size() << " 个站点\n\n";
+
+    const std::vector<Station>& allStations = stationManager_.getAllStations();
     for (int i = 0; i < stations.size(); ++i) {
-        std::cout << stations[i].name;
+        std::vector<std::string> transferLines;
+        for (const auto& station : allStations) {
+            if (station.name == stations[i].name && station.line != lineName) {
+                bool exists = false;
+                for (const auto& transferLine : transferLines) {
+                    if (transferLine == station.line) {
+                        exists = true;
+                        break;
+                    }
+                }
+                if (!exists) {
+                    transferLines.push_back(station.line);
+                }
+            }
+        }
+
+        std::cout << "○ " << stations[i].name;
+        if (!transferLines.empty()) {
+            std::cout << "（换乘：";
+            for (int j = 0; j < transferLines.size(); ++j) {
+                if (j > 0) {
+                    std::cout << "，";
+                }
+                std::cout << transferLines[j];
+            }
+            std::cout << "）";
+        }
         if (stations[i].status == StationStatus::Closed) {
             std::cout << "  关闭";
         }
         std::cout << "\n";
+        if (i + 1 < stations.size()) {
+            std::cout << "|\n";
+        }
     }
 
     waitForEnter();

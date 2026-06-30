@@ -31,19 +31,21 @@ bool MetroGraph::buildFromCsv(const string& fileName, const StationManager& stat
         string token;
 
         if (!getline(ss, token, ',')) continue;
-        int from = stoi(token);
+        int from = stoi(trimCsvField(token));
 
         if (!getline(ss, token, ',')) continue;
-        int to = stoi(token);
+        int to = stoi(trimCsvField(token));
 
         string lineName;
         if (!getline(ss, lineName, ',')) continue;
+        lineName = trimCsvField(lineName);
 
         string direction;
         if (!getline(ss, direction, ',')) continue;
+        direction = trimCsvField(direction);
 
         if (!getline(ss, token, ',')) continue;
-        int time = stoi(token);
+        int time = stoi(trimCsvField(token));
 
         if (!stationManager.hasStation(from) || !stationManager.hasStation(to)) {
             cerr << "跳过无效边 " << from << " -> " << to << endl;
