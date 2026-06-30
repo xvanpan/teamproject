@@ -22,8 +22,8 @@ std::string StationManager::toStatusText(StationStatus status) const
 void StationManager::rebuildIndex()
 {
     idToIndex_.clear();
-    for (int i = 0; i < stations_.size(); ++i) {
-        idToIndex_[stations_[i].id] = i;
+    for (std::size_t i = 0; i < stations_.size(); ++i) {
+        idToIndex_[stations_[i].id] = (int)i;
     }
 }
 

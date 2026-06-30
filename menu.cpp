@@ -248,7 +248,7 @@ void MenuSystem::showClosedStations()
     }
     else {
         std::cout << "当前关闭站点如下：\n";
-        for (int i = 0; i < closedStations.size(); ++i) {
+        for (std::size_t i = 0; i < closedStations.size(); ++i) {
             std::cout << i + 1 << ". "
                 << closedStations[i].name << "（"
                 << closedStations[i].line << "）\n";
@@ -307,7 +307,7 @@ void MenuSystem::showLineInfo()
     std::cout << lineName << " 共有 " << stations.size() << " 个站点\n\n";
 
     const std::vector<Station>& allStations = stationManager_.getAllStations();
-    for (int i = 0; i < stations.size(); ++i) {
+    for (std::size_t i = 0; i < stations.size(); ++i) {
         std::vector<std::string> transferLines;
         for (const auto& station : allStations) {
             if (station.name == stations[i].name && station.line != lineName) {
@@ -327,7 +327,7 @@ void MenuSystem::showLineInfo()
         std::cout << "○ " << stations[i].name;
         if (!transferLines.empty()) {
             std::cout << "（换乘：";
-            for (int j = 0; j < transferLines.size(); ++j) {
+            for (std::size_t j = 0; j < transferLines.size(); ++j) {
                 if (j > 0) {
                     std::cout << "，";
                 }
@@ -359,11 +359,28 @@ void MenuSystem::analyzeAffectedStations()
     std::cout << "\n==============================\n";
     const Station* station = stationManager_.getStationById(stationId);
     if (station != nullptr) {
-        std::cout << "关闭站点：" << station->name << "（" << station->line << "）\n\n";
+        std::cout << "分析站点：" << station->name << "（" << station->line << "，按关闭处理）\n\n";
     }
 
-    std::cout << "受影响分析功能请接入你队友的图算法后补全。\n";
-    std::cout << "当前可先展示被选中的目标站点。\n";
+    std::vector<int> affectedStationIds = pathFinder_.analyzeAffectedArea({ stationId });
+    if (affectedStationIds.empty()) {
+        std::cout << "未发现直接受影响站点。\n";
+    }
+    else {
+        std::cout << "直接受影响站点共 " << affectedStationIds.size() << " 个：\n";
+        for (std::size_t i = 0; i < affectedStationIds.size(); ++i) {
+            const Station* affectedStation = stationManager_.getStationById(affectedStationIds[i]);
+            if (affectedStation == nullptr) {
+                continue;
+            }
+
+            std::cout << i + 1 << ". "
+                << affectedStation->name << "（"
+                << affectedStation->line << "，"
+                << (affectedStation->status == StationStatus::Open ? "开启" : "关闭")
+                << "）\n";
+        }
+    }
     std::cout << "==============================\n";
 
     waitForEnter();
@@ -410,7 +427,7 @@ int MenuSystem::selectStationByKeyword(const std::string& prompt) const
     }
 
     std::cout << "匹配的站点如下：\n";
-    for (int i = 0; i < ids.size(); ++i) {
+    for (std::size_t i = 0; i < ids.size(); ++i) {
         const Station* station = stationManager_.getStationById(ids[i]);
         if (station != nullptr) {
             std::cout << i + 1 << ". "
@@ -423,7 +440,7 @@ int MenuSystem::selectStationByKeyword(const std::string& prompt) const
     std::cout << "请输入对应编号选择站点：";
     std::cin >> choice;
 
-    if (choice < 1 || choice > ids.size()) {
+    if (choice < 1 || (std::size_t)choice > ids.size()) {
         return -1;
     }
     return ids[choice - 1];
@@ -471,7 +488,7 @@ void MenuSystem::queryKShortestTimePaths()
         std::cout << "未找到可行路径。\n";
     }
     else {
-        for (int i = 0; i < results.size(); ++i) {
+        for (std::size_t i = 0; i < results.size(); ++i) {
             std::cout << "\n第 " << i + 1 << " 条路径：\n";
             printPathResult(results[i]);
         }
@@ -521,7 +538,7 @@ void MenuSystem::queryKMinTransferPaths()
         std::cout << "未找到可行路径。\n";
     }
     else {
-        for (int i = 0; i < results.size(); ++i) {
+        for (std::size_t i = 0; i < results.size(); ++i) {
             std::cout << "\n第 " << i + 1 << " 条路径：\n";
             printPathResult(results[i]);
         }
@@ -543,7 +560,7 @@ void MenuSystem::printPathResult(const PathResult& result) const
 
     if (!result.lines.empty()) {
         std::cout << "路径线路：";
-        for (int i = 0; i < result.lines.size(); ++i) {
+        for (std::size_t i = 0; i < result.lines.size(); ++i) {
             std::cout << result.lines[i];
             if (i != result.lines.size() - 1) {
                 std::cout << " -> ";
@@ -554,7 +571,7 @@ void MenuSystem::printPathResult(const PathResult& result) const
 
     if (!result.stationNames.empty()) {
         std::cout << "站点路径：";
-        for (int i = 0; i < result.stationNames.size(); ++i) {
+        for (std::size_t i = 0; i < result.stationNames.size(); ++i) {
             std::cout << result.stationNames[i];
             if (i != result.stationNames.size() - 1) {
                 std::cout << " -> ";
@@ -565,7 +582,7 @@ void MenuSystem::printPathResult(const PathResult& result) const
 
     if (!result.transferStations.empty()) {
         std::cout << "换乘站：";
-        for (int i = 0; i < result.transferStations.size(); ++i) {
+        for (std::size_t i = 0; i < result.transferStations.size(); ++i) {
             std::cout << result.transferStations[i];
             if (i != result.transferStations.size() - 1) {
                 std::cout << "、";
