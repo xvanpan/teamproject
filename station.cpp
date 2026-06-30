@@ -190,3 +190,7 @@ bool StationManager::resetFromInitCsv(const std::string& initFile, const std::st
 
     return saveToCsv(targetFile);
 }
+bool StationManager::hasStation(int id) const
+{
+    return idToIndex_.find(id) != idToIndex_.end();
+}
