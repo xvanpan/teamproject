@@ -43,7 +43,7 @@ bool PathFinder::isStationAvailable(int stationId) const {
 }
 
 int PathFinder::countTransfers(const vector<int>& stationIds) const {
-    int transfers = 0;
+    int transfers = 0;//统计换成次数
     if (stationIds.empty()) return transfers;
     int startId = stationIds.front();
 
@@ -141,7 +141,7 @@ PathResult PathFinder::buildPathResult(const vector<int>& prev, int startId, int
 }
 
 PathResult PathFinder::shortestTimePath(int startId, int endId) const {
-    PathResult empty;
+    PathResult empty;//单条最短时间
     empty.valid = false;
 
     if (!isStationAvailable(startId) || !isStationAvailable(endId)) {
@@ -190,7 +190,7 @@ PathResult PathFinder::shortestTimePath(int startId, int endId) const {
     return buildPathResult(prev, startId, endId);
 }
 
-PathResult PathFinder::minTransferPath(int startId, int endId) const {
+PathResult PathFinder::minTransferPath(int startId, int endId) const {//单条最少换乘
     PathResult empty;
     empty.valid = false;
 
@@ -243,7 +243,7 @@ PathResult PathFinder::minTransferPath(int startId, int endId) const {
     return buildPathResult(prev, startId, endId);
 }
 
-vector<PathResult> PathFinder::kShortestTimePaths(int startId, int endId, int k) const {
+vector<PathResult> PathFinder::kShortestTimePaths(int startId, int endId, int k) const {//k条最短时间
     vector<PathResult> results;
     if (k <= 0 || !isStationAvailable(startId) || !isStationAvailable(endId)) {
         return results;
@@ -304,7 +304,7 @@ vector<PathResult> PathFinder::kShortestTimePaths(int startId, int endId, int k)
     return results;
 }
 
-vector<PathResult> PathFinder::kMinTransferPaths(int startId, int endId, int k) const {
+vector<PathResult> PathFinder::kMinTransferPaths(int startId, int endId, int k) const {//k条最短换乘
     vector<PathResult> results;
     if (k <= 0 || !isStationAvailable(startId) || !isStationAvailable(endId)) {
         return results;
@@ -363,7 +363,7 @@ vector<PathResult> PathFinder::kMinTransferPaths(int startId, int endId, int k) 
     return results;
 }
 
-vector<int> PathFinder::analyzeAffectedArea(const vector<int>& closedStationIds) const {
+vector<int> PathFinder::analyzeAffectedArea(const vector<int>& closedStationIds) const {//影响区域
     vector<int> affected;
     unordered_set<int> closedSet(closedStationIds.begin(), closedStationIds.end());
     unordered_set<int> affectedSet;

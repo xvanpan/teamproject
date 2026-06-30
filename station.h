@@ -18,11 +18,11 @@ public:
     bool setStationStatus(int id, StationStatus status);
     bool setStationOpen(int id, bool isOpen);
     bool isStationOpen(int id) const;
-    
+    bool hasStation(int id)const;
 
-    std::vector<Station> getClosedStations() const;//获得关闭站点列表
-    std::vector<Station> getStationsByLine(const std::string& line) const;//通过line获得station
-    std::vector<int> searchStationByName(const std::string& name) const;//获得同名站点所有的id用于遍历换乘
+    std::vector<Station> getClosedStations() const;
+    std::vector<Station> getStationsByLine(const std::string& line) const;
+    std::vector<int> searchStationByName(const std::string& name) const;
 
     const std::vector<Station>& getAllStations() const;//公共调用接口
 
