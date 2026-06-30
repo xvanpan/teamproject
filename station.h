@@ -15,9 +15,10 @@ public:
     const Station* getStationById(int id) const;
     Station* getStationById(int id);//通过id返回station
 
-    bool setStationStatus(int id, StationStatus status);//调整站点状态
-    bool setStationOpen(int id, bool isOpen);//实际对外修改站点状态接口
-    bool isStationOpen(int id) const;//判断station状态
+    bool setStationStatus(int id, StationStatus status);
+    bool setStationOpen(int id, bool isOpen);
+    bool isStationOpen(int id) const;
+    
 
     std::vector<Station> getClosedStations() const;//获得关闭站点列表
     std::vector<Station> getStationsByLine(const std::string& line) const;//通过line获得station
