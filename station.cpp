@@ -2,6 +2,22 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <utility>
+
+namespace {
+    bool parseUpdateStatusText(const std::string& text, StationStatus& status)
+    {
+        if (text == "开启") {
+            status = StationStatus::Open;
+            return true;
+        }
+        if (text == "关闭") {
+            status = StationStatus::Closed;
+            return true;
+        }
+        return false;
+    }
+}
 
 StationStatus StationManager::parseStatusText(const std::string& text) const
 {
@@ -73,7 +89,7 @@ bool StationManager::saveToCsv(const std::string& fileName) const
 {
     std::ofstream fout(fileName);
     if (!fout.is_open()) {
-        std::cerr << "错误：无法写入文件 " << fileName << std::endl;
+        std::cerr << "目标文件不存在。" << std::endl;
         return false;
     }
 
@@ -100,12 +116,13 @@ bool StationManager::batchUpdateStatusFromCsv(const std::string& updateFile)
 {
     std::ifstream fin(updateFile);
     if (!fin.is_open()) {
-        std::cerr << "错误：无法打开文件 " << updateFile << std::endl;
+        std::cerr << "更新文件不存在。" << std::endl;
         return false;
     }
 
     std::string line;
     std::getline(fin, line);
+    std::vector<std::pair<int, StationStatus>> updates;
 
     while (std::getline(fin, line)) {
         if (line.empty()) {
@@ -115,13 +132,49 @@ bool StationManager::batchUpdateStatusFromCsv(const std::string& updateFile)
         std::stringstream ss(line);
         std::string idText;
         std::string statusText;
+        std::string extraText;
 
-        std::getline(ss, idText, ',');
-        std::getline(ss, statusText, ',');
+        if (!std::getline(ss, idText, ',') || !std::getline(ss, statusText, ',') || std::getline(ss, extraText, ',')) {
+            std::cerr << "格式错误，终止更新。" << std::endl;
+            return false;
+        }
 
-        int id = std::stoi(trimCsvField(idText));
-        StationStatus status = parseStatusText(trimCsvField(statusText));
-        setStationStatus(id, status);
+        int id = 0;
+        try {
+            std::size_t pos = 0;
+            std::string trimmedId = trimCsvField(idText);
+            id = std::stoi(trimmedId, &pos);
+            if (pos != trimmedId.size()) {
+                std::cerr << "格式错误，终止更新。" << std::endl;
+                return false;
+            }
+        }
+        catch (...) {
+            std::cerr << "格式错误，终止更新。" << std::endl;
+            return false;
+        }
+
+        StationStatus status;
+        if (!parseUpdateStatusText(trimCsvField(statusText), status)) {
+            std::cerr << "非法状态值，跳过该行。（必须为“开启/关闭”）" << std::endl;
+            continue;
+        }
+
+        if (!hasStation(id)) {
+            std::cerr << "未匹配到对应站点，跳过该行。" << std::endl;
+            continue;
+        }
+
+        updates.push_back({ id, status });
+    }
+
+    if (updates.empty()) {
+        std::cerr << "未检测到有效更新记录。" << std::endl;
+        return false;
+    }
+
+    for (const auto& update : updates) {
+        setStationStatus(update.first, update.second);
     }
 
     return true;

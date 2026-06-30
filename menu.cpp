@@ -196,7 +196,10 @@ void MenuSystem::batchUpdateStationStatus()
 {
     bool ok = stationManager_.batchUpdateStatusFromCsv(resolveDataPath("update_station_status.csv"));
     if (ok) {
-        stationManager_.saveToCsv(resolveDataPath("Station.csv"));
+        ok = stationManager_.saveToCsv(resolveDataPath("Station.csv"));
+    }
+
+    if (ok) {
         std::cout << "\n批量更新成功。\n";
     }
     else {
@@ -221,7 +224,7 @@ void MenuSystem::manualUpdateStationStatus()
         std::cout << "站点状态更新成功。\n";
     }
     else {
-        std::cout << "站点状态更新失败，可能站点 id 不存在。\n";
+        std::cout << "指定站点未找到。\n";
     }
     waitForEnter();
 }
