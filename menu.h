@@ -32,6 +32,9 @@ private:
     void searchStationInfo();
 
     void printPathResult(const PathResult& result) const;
+    int selectStationByKeyword(const std::string& prompt) const;
+    std::string lineNumberToName(int lineNumber) const;
+    void waitForEnter() const;
 
 private:
     StationManager& stationManager_;
