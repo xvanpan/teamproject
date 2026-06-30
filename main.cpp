@@ -4,12 +4,10 @@
 #include "menu.h"
 #include <direct.h>
 #include <iostream>
-
+#include<Windows.h>
 int main() {
-    char cwd[FILENAME_MAX];
-    if (_getcwd(cwd, sizeof(cwd)) != nullptr) {
-        std::cout << "当前工作目录: " << cwd << std::endl;
-    }
+    SetConsoleCP(CP_UTF8);
+    SetConsoleOutputCP(CP_UTF8);
 
     const std::string stationFile = resolveDataPath("Station.csv");
     const std::string edgeFile = resolveDataPath("Edge.csv");
