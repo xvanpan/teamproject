@@ -15,8 +15,27 @@ namespace {
         return edge.type == EdgeType::Transfer || edge.line == "换乘";
     }
 
-    bool countsAsTransfer(const Edge& edge, int fromStation, int startStation) {
-        return isTransferEdge(edge) && fromStation != startStation;
+    bool isSameStationName(const StationManager& stationManager, int leftId, int rightId) {
+        const Station* left = stationManager.getStationById(leftId);
+        const Station* right = stationManager.getStationById(rightId);
+        return left != nullptr && right != nullptr && left->name == right->name;
+    }
+
+    bool isVirtualEndpointTransfer(const Edge& edge, int startStation, int endStation, const StationManager& stationManager) {
+        bool transferAtStart = edge.from == startStation || isSameStationName(stationManager, edge.from, startStation);
+        bool transferAtEnd = edge.to == endStation || isSameStationName(stationManager, edge.to, endStation);
+        return isTransferEdge(edge) && (transferAtStart || transferAtEnd);
+    }
+
+    bool countsAsTransfer(const Edge& edge, int startStation, int endStation, const StationManager& stationManager) {
+        return isTransferEdge(edge) && !isVirtualEndpointTransfer(edge, startStation, endStation, stationManager);
+    }
+
+    int effectiveTimeCost(const Edge& edge, int startStation, int endStation, const StationManager& stationManager) {
+        if (isVirtualEndpointTransfer(edge, startStation, endStation, stationManager)) {
+            return 0;
+        }
+        return edge.timeCost;
     }
 
     string makePathKey(const vector<int>& path) {
@@ -42,10 +61,9 @@ bool PathFinder::isStationAvailable(int stationId) const {
     return graph_.hasStation(stationId) && station != nullptr && station->status == StationStatus::Open;
 }
 
-int PathFinder::countTransfers(const vector<int>& stationIds) const {
+int PathFinder::countTransfers(const vector<int>& stationIds, int startId, int endId) const {
     int transfers = 0;//统计换成次数
     if (stationIds.empty()) return transfers;
-    int startId = stationIds.front();
 
     for (int i = 0; i + 1 < (int)stationIds.size(); ++i) {
         int from = stationIds[i];
@@ -53,7 +71,7 @@ int PathFinder::countTransfers(const vector<int>& stationIds) const {
 
         for (const Edge& edge : graph_.neighbors(from)) {
             if (edge.to == to) {
-                if (countsAsTransfer(edge, from, startId)) {
+                if (countsAsTransfer(edge, startId, endId, stationManager_)) {
                     transfers++;
                 }
                 break;
@@ -105,8 +123,9 @@ PathResult PathFinder::buildPathResult(const vector<int>& prev, int startId, int
             result.valid = false;
             return result;
         }
-        result.stationNames.push_back(station->name);
-        result.lines.push_back(station->line);
+        if (result.stationNames.empty() || result.stationNames.back() != station->name) {
+            result.stationNames.push_back(station->name);
+        }
     }
 
     for (int i = 0; i + 1 < (int)stationIds.size(); ++i) {
@@ -116,8 +135,11 @@ PathResult PathFinder::buildPathResult(const vector<int>& prev, int startId, int
 
         for (const Edge& edge : graph_.neighbors(from)) {
             if (edge.to == to) {
-                totalTime += edge.timeCost;
-                if (countsAsTransfer(edge, from, startId)) {
+                totalTime += effectiveTimeCost(edge, startId, endId, stationManager_);
+                if (!isTransferEdge(edge) && (result.lines.empty() || result.lines.back() != edge.line)) {
+                    result.lines.push_back(edge.line);
+                }
+                if (countsAsTransfer(edge, startId, endId, stationManager_)) {
                     const Station* transferStation = stationManager_.getStationById(from);
                     if (transferStation != nullptr && transferStationSet.insert(transferStation->name).second) {
                         result.transferStations.push_back(transferStation->name);
@@ -133,9 +155,16 @@ PathResult PathFinder::buildPathResult(const vector<int>& prev, int startId, int
         }
     }
 
+    if (result.lines.empty() && !stationIds.empty()) {
+        const Station* station = stationManager_.getStationById(stationIds.front());
+        if (station != nullptr) {
+            result.lines.push_back(station->line);
+        }
+    }
+
     result.totalTime = totalTime;
     result.transferCount = (int)result.transferStations.size();
-    result.passedStationCount = (int)stationIds.size();
+    result.passedStationCount = (int)result.stationNames.size();
     result.valid = true;
     return result;
 }
@@ -173,8 +202,8 @@ PathResult PathFinder::shortestTimePath(int startId, int endId) const {
             int v = edge.to;
             if (!isStationAvailable(v)) continue;
 
-            int nextDist = curDist + edge.timeCost;
-            int nextTransfers = curTransfers + (countsAsTransfer(edge, u, startId) ? 1 : 0);
+            int nextDist = curDist + effectiveTimeCost(edge, startId, endId, stationManager_);
+            int nextTransfers = curTransfers + (countsAsTransfer(edge, startId, endId, stationManager_) ? 1 : 0);
             if (nextDist < dist[v] || (nextDist == dist[v] && nextTransfers < transferDist[v])) {
                 dist[v] = nextDist;
                 transferDist[v] = nextTransfers;
@@ -224,8 +253,8 @@ PathResult PathFinder::minTransferPath(int startId, int endId) const {//单条�
             int v = edge.to;
             if (!isStationAvailable(v)) continue;
 
-            int nextTransfers = curTransfers + (countsAsTransfer(edge, u, startId) ? 1 : 0);
-            int nextTime = curTime + edge.timeCost;
+            int nextTransfers = curTransfers + (countsAsTransfer(edge, startId, endId, stationManager_) ? 1 : 0);
+            int nextTime = curTime + effectiveTimeCost(edge, startId, endId, stationManager_);
 
             if (nextTransfers < transferDist[v] ||
                 (nextTransfers == transferDist[v] && nextTime < timeDist[v])) {
@@ -304,8 +333,8 @@ vector<PathResult> PathFinder::kShortestTimePaths(int startId, int endId, int k)
             if (v >= 0 && v < graph_.vertexCount() && expandedCount[v] >= k) continue;
 
             State next = cur;
-            next.totalTime += edge.timeCost;
-            next.transfers += countsAsTransfer(edge, u, startId) ? 1 : 0;
+            next.totalTime += effectiveTimeCost(edge, startId, endId, stationManager_);
+            next.transfers += countsAsTransfer(edge, startId, endId, stationManager_) ? 1 : 0;
             next.path.push_back(v);
             pq.push(next);
         }
@@ -380,8 +409,8 @@ vector<PathResult> PathFinder::kMinTransferPaths(int startId, int endId, int k) 
             if (v >= 0 && v < graph_.vertexCount() && expandedCount[v] >= k) continue;
 
             State next = cur;
-            next.transfers += countsAsTransfer(edge, u, startId) ? 1 : 0;
-            next.totalTime += edge.timeCost;
+            next.transfers += countsAsTransfer(edge, startId, endId, stationManager_) ? 1 : 0;
+            next.totalTime += effectiveTimeCost(edge, startId, endId, stationManager_);
             next.path.push_back(v);
             pq.push(next);
         }

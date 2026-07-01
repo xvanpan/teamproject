@@ -33,6 +33,10 @@ private:
 
     void printPathResult(const PathResult& result) const;
     int selectStationByKeyword(const std::string& prompt) const;
+    bool readPathEndpoints(int& startId, int& endId) const;
+    bool validatePathEndpoints(int startId, int endId) const;
+    void printClosedEndpointMessage(const std::string& endpointName, int stationId) const;
+    bool isSamePhysicalStation(int leftId, int rightId) const;
     std::string lineNumberToName(int lineNumber) const;
     void waitForEnter() const;
 

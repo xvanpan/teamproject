@@ -449,18 +449,74 @@ int MenuSystem::selectStationByKeyword(const std::string& prompt) const
     return ids[choice - 1];
 }
 
-void MenuSystem::queryShortestTimePath()
+bool MenuSystem::readPathEndpoints(int& startId, int& endId) const
 {
-    int startId = selectStationByKeyword("请输入起点站关键字：");
+    startId = selectStationByKeyword("请输入起点站关键字：");
     if (startId == -1) {
         std::cout << "起点选择失败。\n";
-        waitForEnter();
+        return false;
+    }
+
+    endId = selectStationByKeyword("请输入终点站关键字：");
+    if (endId == -1) {
+        std::cout << "终点选择失败。\n";
+        return false;
+    }
+
+    return validatePathEndpoints(startId, endId);
+}
+
+bool MenuSystem::validatePathEndpoints(int startId, int endId) const
+{
+    const Station* start = stationManager_.getStationById(startId);
+    const Station* end = stationManager_.getStationById(endId);
+    if (start == nullptr || end == nullptr) {
+        std::cout << "未找到可行路径。\n";
+        return false;
+    }
+
+    if (start->status == StationStatus::Closed) {
+        printClosedEndpointMessage("起点", startId);
+        return false;
+    }
+
+    if (end->status == StationStatus::Closed) {
+        printClosedEndpointMessage("终点", endId);
+        return false;
+    }
+
+    if (isSamePhysicalStation(startId, endId)) {
+        std::cout << "起点和终点相同，无需进行路径规划。\n";
+        return false;
+    }
+
+    return true;
+}
+
+void MenuSystem::printClosedEndpointMessage(const std::string& endpointName, int stationId) const
+{
+    const Station* station = stationManager_.getStationById(stationId);
+    if (station == nullptr) {
+        std::cout << endpointName << "站点不存在，无法进行路径规划。\n";
         return;
     }
 
-    int endId = selectStationByKeyword("请输入终点站关键字：");
-    if (endId == -1) {
-        std::cout << "终点选择失败。\n";
+    std::cout << endpointName << "：" << station->name << "（" << station->line
+        << "）已关闭，无法进行路径规划。\n";
+}
+
+bool MenuSystem::isSamePhysicalStation(int leftId, int rightId) const
+{
+    const Station* left = stationManager_.getStationById(leftId);
+    const Station* right = stationManager_.getStationById(rightId);
+    return left != nullptr && right != nullptr && left->name == right->name;
+}
+
+void MenuSystem::queryShortestTimePath()
+{
+    int startId;
+    int endId;
+    if (!readPathEndpoints(startId, endId)) {
         waitForEnter();
         return;
     }
@@ -472,16 +528,9 @@ void MenuSystem::queryShortestTimePath()
 
 void MenuSystem::queryKShortestTimePaths()
 {
-    int startId = selectStationByKeyword("请输入起点站关键字：");
-    if (startId == -1) {
-        std::cout << "起点选择失败。\n";
-        waitForEnter();
-        return;
-    }
-
-    int endId = selectStationByKeyword("请输入终点站关键字：");
-    if (endId == -1) {
-        std::cout << "终点选择失败。\n";
+    int startId;
+    int endId;
+    if (!readPathEndpoints(startId, endId)) {
         waitForEnter();
         return;
     }
@@ -501,16 +550,9 @@ void MenuSystem::queryKShortestTimePaths()
 
 void MenuSystem::queryMinTransferPath()
 {
-    int startId = selectStationByKeyword("请输入起点站关键字：");
-    if (startId == -1) {
-        std::cout << "起点选择失败。\n";
-        waitForEnter();
-        return;
-    }
-
-    int endId = selectStationByKeyword("请输入终点站关键字：");
-    if (endId == -1) {
-        std::cout << "终点选择失败。\n";
+    int startId;
+    int endId;
+    if (!readPathEndpoints(startId, endId)) {
         waitForEnter();
         return;
     }
@@ -522,16 +564,9 @@ void MenuSystem::queryMinTransferPath()
 
 void MenuSystem::queryKMinTransferPaths()
 {
-    int startId = selectStationByKeyword("请输入起点站关键字：");
-    if (startId == -1) {
-        std::cout << "起点选择失败。\n";
-        waitForEnter();
-        return;
-    }
-
-    int endId = selectStationByKeyword("请输入终点站关键字：");
-    if (endId == -1) {
-        std::cout << "终点选择失败。\n";
+    int startId;
+    int endId;
+    if (!readPathEndpoints(startId, endId)) {
         waitForEnter();
         return;
     }

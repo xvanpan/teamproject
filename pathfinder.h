@@ -19,7 +19,7 @@ public:
 
 private:
     PathResult buildPathResult(const std::vector<int>& prev, int startId, int endId) const;
-    int countTransfers(const std::vector<int>& stationIds) const;
+    int countTransfers(const std::vector<int>& stationIds, int startId, int endId) const;
     bool isStationAvailable(int stationId) const;
 
 private:
